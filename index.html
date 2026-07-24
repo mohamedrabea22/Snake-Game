@@ -1,19 +1,218 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake Game </title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لعبة الثعبان المتجاوبة | Cyber Snake Game</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;800&family=Tajawal:wght@700;800&display=swap');
 
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Tajawal', 'Plus Jakarta Sans', sans-serif;
+    }
 
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link rel="stylesheet" href="style.css" />
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #090d16;
+      color: #f8fafc;
+      padding: 16px;
+      overflow-x: hidden;
+    }
 
+    /* خلفية متدرجة مع مؤثرات ضوئية */
+    body::before, body::after {
+      content: '';
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      filter: blur(100px);
+      z-index: 0;
+    }
+    body::before {
+      background: #10b981;
+      top: 10%;
+      right: 10%;
+    }
+    body::after {
+      background: #06b6d4;
+      bottom: 10%;
+      left: 10%;
+    }
+
+    /* كارت اللعبة الرئيسي - متجاوب */
+    .game-card {
+      position: relative;
+      z-index: 1;
+      background: rgba(17, 24, 39, 0.8);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 28px;
+      padding: 20px;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+      max-width: 440px; /* لضمان التناسق على الموبايل والشاشات الكبيرة */
+    }
+
+    .header h1 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #34d399, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-align: center;
+    }
+
+    /* شريط النتيجة */
+    .score-board {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 10px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .score-board span {
+      color: #34d399;
+    }
+
+    /* حاوية الـ Canvas المتجاوبة */
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1; /* الحفاظ على نسبة مربعة 1:1 دائماً */
+      border-radius: 20px;
+      overflow: hidden;
+      border: 2px solid rgba(52, 211, 153, 0.3);
+      box-shadow: 0 0 20px rgba(52, 211, 153, 0.15);
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      background: #0f172a;
+      display: block;
+    }
+
+    /* رسالة التوجيه "اضغط للحركة" */
+    .start-msg {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(15, 23, 42, 0.85);
+      padding: 12px 20px;
+      border-radius: 12px;
+      border: 1px solid rgba(52, 211, 153, 0.4);
+      color: #34d399;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-align: center;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* الشاشة المنبثقة عند الخسارة */
+    .overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      border-radius: 20px;
+    }
+
+    .overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .overlay h2 {
+      font-size: 1.8rem;
+      color: #f87171;
+    }
+
+    .btn-start {
+      padding: 12px 28px;
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      border: none;
+      border-radius: 14px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .btn-start:hover {
+      transform: scale(1.05);
+    }
+
+    /* أزرار اللمس للموبايل */
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      width: 170px;
+      margin-top: 4px;
+    }
+
+    .btn-ctrl {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .btn-ctrl:active {
+      background: rgba(52, 211, 153, 0.3);
+    }
+
+    .btn-up { grid-column: 2; }
+    .btn-left { grid-column: 1; grid-row: 2; }
+    .btn-down { grid-column: 2; grid-row: 2; }
+    .btn-right { grid-column: 3; grid-row: 2; }
+  </style>
 </head>
-
 <body>
-    <div class="game-card">
+
+  <div class="game-card">
     <div class="header">
       <h1>لعبة الثعبان 🐍</h1>
     </div>
@@ -27,7 +226,7 @@
       <canvas id="gameCanvas" width="400" height="400"></canvas>
 
       <!-- رسالة البداية -->
-      <div class="start-msg" id="startMsg">اضغط الأزرار للبدء 🎮</div>
+      <div class="start-msg" id="startMsg">اضغط الأسهم أو الأزرار للبدء 🎮</div>
 
       <!-- Overlay Game Over -->
       <div class="overlay" id="gameOverOverlay">
@@ -36,8 +235,200 @@
         <button class="btn-start" onclick="resetGame()">العب مجدداً 🔄</button>
       </div>
     </div>
-  </div>
-    <script src="script.js"></script>
-</body>
 
+    <!-- أزرار التحكم -->
+    <div class="controls">
+      <button class="btn-ctrl btn-up" onclick="setDirection('UP')">⬆️</button>
+      <button class="btn-ctrl btn-left" onclick="setDirection('LEFT')">⬅️</button>
+      <button class="btn-ctrl btn-down" onclick="setDirection('DOWN')">⬇️</button>
+      <button class="btn-ctrl btn-right" onclick="setDirection('RIGHT')">➡️</button>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const gridSize = 20;
+    const tileCount = canvas.width / gridSize;
+
+    let snake = [];
+    let food = { x: 0, y: 0 };
+    let dx = 0;
+    let dy = 0;
+    let score = 0;
+    let highScore = localStorage.getItem("snakeHighScore") || 0;
+    let gameInterval = null;
+    let isChangingDirection = false;
+    let gameStarted = false; // متغير للتحكم في بدء الحركة
+
+    document.getElementById("highScore").innerText = highScore;
+
+    function resetGame() {
+      snake = [
+        { x: 10 * gridSize, y: 10 * gridSize },
+        { x: 9 * gridSize, y: 10 * gridSize },
+        { x: 8 * gridSize, y: 10 * gridSize }
+      ];
+      score = 0;
+      dx = 0; // الثعبان ثابت في البداية
+      dy = 0;
+      gameStarted = false;
+
+      document.getElementById("score").innerText = score;
+      document.getElementById("gameOverOverlay").classList.remove("active");
+      document.getElementById("startMsg").style.display = "block";
+
+      generateFood();
+      clearCanvas();
+      drawFood();
+      drawSnake();
+
+      // تبطيء سرعة اللعبة من (100ms) إلى (160ms)
+      if (gameInterval) clearInterval(gameInterval);
+      gameInterval = setInterval(gameLoop, 160); 
+    }
+
+    function gameLoop() {
+      if (!gameStarted) return; // لا يتحرك حتى يضغط اللاعب على زر
+
+      if (isGameOver()) {
+        handleGameOver();
+        return;
+      }
+
+      isChangingDirection = false;
+      clearCanvas();
+      drawFood();
+      moveSnake();
+      drawSnake();
+    }
+
+    function clearCanvas() {
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // خطوط شبكية خفيفة
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.02)";
+      for (let i = 0; i < canvas.width; i += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+      }
+    }
+
+    function drawSnake() {
+      snake.forEach((part, index) => {
+        if (index === 0) {
+          ctx.fillStyle = "#34d399";
+          ctx.shadowBlur = 12;
+          ctx.shadowColor = "#34d399";
+        } else {
+          ctx.fillStyle = "#059669";
+          ctx.shadowBlur = 0;
+        }
+
+        ctx.beginPath();
+        ctx.roundRect(part.x + 1, part.y + 1, gridSize - 2, gridSize - 2, 6);
+        ctx.fill();
+      });
+      ctx.shadowBlur = 0;
+    }
+
+    function moveSnake() {
+      const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+      snake.unshift(head);
+
+      if (head.x === food.x && head.y === food.y) {
+        score += 10;
+        document.getElementById("score").innerText = score;
+        if (score > highScore) {
+          highScore = score;
+          localStorage.setItem("snakeHighScore", highScore);
+          document.getElementById("highScore").innerText = highScore;
+        }
+        generateFood();
+      } else {
+        snake.pop();
+      }
+    }
+
+    function generateFood() {
+      food.x = Math.floor(Math.random() * tileCount) * gridSize;
+      food.y = Math.floor(Math.random() * tileCount) * gridSize;
+
+      snake.forEach(part => {
+        if (part.x === food.x && part.y === food.y) generateFood();
+      });
+    }
+
+    function drawFood() {
+      ctx.fillStyle = "#f43f5e";
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = "#f43f5e";
+
+      ctx.beginPath();
+      ctx.arc(food.x + gridSize / 2, food.y + gridSize / 2, gridSize / 2 - 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+    }
+
+    function isGameOver() {
+      const head = snake[0];
+      const hitLeft = head.x < 0;
+      const hitRight = head.x >= canvas.width;
+      const hitTop = head.y < 0;
+      const hitBottom = head.y >= canvas.height;
+
+      if (hitLeft || hitRight || hitTop || hitBottom) return true;
+
+      for (let i = 1; i < snake.length; i++) {
+        if (head.x === snake[i].x && head.y === snake[i].y) return true;
+      }
+
+      return false;
+    }
+
+    function handleGameOver() {
+      clearInterval(gameInterval);
+      document.getElementById("finalScore").innerText = score;
+      document.getElementById("gameOverOverlay").classList.add("active");
+    }
+
+    function setDirection(dir) {
+      if (isChangingDirection) return;
+
+      const goingUp = dy === -gridSize;
+      const goingDown = dy === gridSize;
+      const goingRight = dx === gridSize;
+      const goingLeft = dx === -gridSize;
+
+      // عند أول تحريك: إخفاء الرسالة وتفعيل الحركة
+      if (!gameStarted) {
+        gameStarted = true;
+        document.getElementById("startMsg").style.display = "none";
+      }
+
+      if (dir === 'LEFT' && !goingRight) { dx = -gridSize; dy = 0; }
+      if (dir === 'UP' && !goingDown) { dx = 0; dy = -gridSize; }
+      if (dir === 'RIGHT' && !goingLeft) { dx = gridSize; dy = 0; }
+      if (dir === 'DOWN' && !goingUp) { dx = 0; dy = gridSize; }
+
+      isChangingDirection = true;
+    }
+
+    // دعم الكيبورد
+    window.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") setDirection('LEFT');
+      if (e.key === "ArrowUp" || e.key === "w" || e.key === "W") setDirection('UP');
+      if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") setDirection('RIGHT');
+      if (e.key === "ArrowDown" || e.key === "s" || e.key === "S") setDirection('DOWN');
+    });
+
+    // تهيئة اللعبة
+    resetGame();
+  </script>
+</body>
 </html>
