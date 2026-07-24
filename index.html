@@ -13,19 +13,30 @@
 </head>
 
 <body>
-    <div class="wrapper">
-        <div class="game-details">
-            <span class="score"> Score : 0 </span>
-            <span class="high-score"> High Score : 0 </span>
-        </div>
-        <div class="play-board"></div>
-        <div class="controls">
-            <i data-key="ArrowLeft" class='bx bx-left-arrow-alt'></i>
-            <i data-key="ArrowUp" class='bx bx-up-arrow-alt'></i>
-            <i data-key="ArrowRight" class='bx bx-right-arrow-alt'></i>
-            <i data-key="ArrowDown" class='bx bx-down-arrow-alt'></i>
-        </div>
+    <div class="game-card">
+    <div class="header">
+      <h1>لعبة الثعبان 🐍</h1>
     </div>
+
+    <div class="score-board">
+      <div>النقاط: <span id="score">0</span></div>
+      <div>أعلى نتيجة: <span id="highScore">0</span></div>
+    </div>
+
+    <div class="canvas-wrapper">
+      <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+      <!-- رسالة البداية -->
+      <div class="start-msg" id="startMsg">اضغط الأزرار للبدء 🎮</div>
+
+      <!-- Overlay Game Over -->
+      <div class="overlay" id="gameOverOverlay">
+        <h2>انتهت اللعبة! 💀</h2>
+        <p>النقاط النهائية: <strong id="finalScore" style="color: #38bdf8;">0</strong></p>
+        <button class="btn-start" onclick="resetGame()">العب مجدداً 🔄</button>
+      </div>
+    </div>
+  </div>
 
 </body>
 
